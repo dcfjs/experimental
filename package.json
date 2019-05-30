@@ -1,0 +1,16 @@
+{
+  "private": true,
+  "workspaces": [
+    "packages/@dcfjs/*"
+  ],
+  "scripts": {
+    "watch:tsc": "tsc -w"
+  },
+  "devDependencies": {
+    "@types/node": "^11.13.8",
+    "typescript": "^3.4.5"
+  },
+  "dependencies": {
+    "tslib": "^1.9.3"
+  }
+}

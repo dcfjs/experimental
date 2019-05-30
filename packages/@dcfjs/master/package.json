@@ -1,0 +1,11 @@
+{
+  "name": "@dcfjs/master",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:dcfjs/experimental.git",
+  "author": "dengyun <dengyun@meideng.net>",
+  "license": "MIT",
+  "dependencies": {
+    "tslib": "^1.9.3"
+  }
+}
