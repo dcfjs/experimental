@@ -5,7 +5,11 @@ import {
   createClient,
   RequestNotFoundError,
 } from '@dcfjs/server/client';
+import * as chai from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
 import { expect } from 'chai';
+
+chai.use(chaiAsPromised);
 
 describe('Server', () => {
   let server: Server;
@@ -40,9 +44,7 @@ describe('Server', () => {
       await client.close();
     });
     it('NotFound', async () => {
-      await expect(async () => {
-        await client.get('/bar');
-      }).throws(RequestNotFoundError);
+      await expect(client.get('/bar')).to.be.rejectedWith(RequestNotFoundError);
     });
   });
 });

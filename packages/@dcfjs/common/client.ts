@@ -1,16 +1,16 @@
 import * as http2 from 'http2';
 import streamToBuffer from './streamToBuffer';
 
-export interface ClientConfig {}
+export interface ClientConfig { }
 
-export class RequestError extends Error {}
+export class RequestError extends Error { }
 
 export class RequestNotFoundError extends Error {
   constructor() {
     super('Not found.');
   }
 }
-export class RequestInternalServerError extends Error {}
+export class RequestInternalServerError extends Error { }
 export class RequestInvalidResponseError extends Error {
   constructor() {
     super('Invalid Response.');
@@ -46,11 +46,11 @@ export class Client {
       }
       const headers: http2.IncomingHttpHeaders &
         http2.IncomingHttpStatusHeader = await new Promise(
-        (resolve, reject) => {
-          req.on('error', reject);
-          req.on('headers', resolve);
-        },
-      );
+          (resolve, reject) => {
+            req.on('error', reject);
+            req.on('response', (headers) => resolve(headers));
+          },
+        );
 
       switch ((headers[http2.constants.HTTP2_HEADER_STATUS] as any) as number) {
         case http2.constants.HTTP_STATUS_NOT_FOUND:

@@ -24,39 +24,44 @@ export async function createServer(
   handlers: ServerHandlerMap,
   config: ServerConfig = {},
 ): Promise<Server> {
-  const server = http2.createServer(async (request, response) => {
+  const server = http2.createServer();
+
+  server.on('stream', async (stream, header) => {
     let body = null;
+    const method = header[http2.constants.HTTP2_HEADER_METHOD];
+    const path = header[http2.constants.HTTP2_HEADER_PATH] as string;
     if (
-      request.method === http2.constants.HTTP2_METHOD_OPTIONS ||
-      request.method === http2.constants.HTTP2_METHOD_HEAD
+      method === http2.constants.HTTP2_METHOD_OPTIONS ||
+      method === http2.constants.HTTP2_METHOD_HEAD
     ) {
-      response.end();
+      stream.respond({
+        [http2.constants.HTTP2_HEADER_STATUS]: http2.constants.HTTP_STATUS_NOT_FOUND
+      })
+      stream.end();
       return;
     }
     if (
-      request.method === http2.constants.HTTP2_METHOD_POST ||
-      request.method === http2.constants.HTTP2_METHOD_PUT
+      method === http2.constants.HTTP2_METHOD_POST ||
+      method === http2.constants.HTTP2_METHOD_PUT
     ) {
-      body = JSON.parse((await streamToBuffer(request)).toString());
+      body = JSON.parse((await streamToBuffer(stream)).toString());
     }
-    const handler = handlers[request.url];
+    const handler = handlers[path];
     if (!handler) {
-      response.setHeader(
-        http2.constants.HTTP2_HEADER_STATUS,
-        http2.constants.HTTP_STATUS_NOT_FOUND,
-      );
-      response.end();
+      stream.respond({
+        [http2.constants.HTTP2_HEADER_STATUS]: http2.constants.HTTP_STATUS_NOT_FOUND,
+      });
+      stream.end();
       return;
     }
     try {
       let resp = await handler(body);
-      response.end(JSON.stringify(resp));
+      stream.end(JSON.stringify(resp));
     } catch (e) {
-      response.setHeader(
-        http2.constants.HTTP2_HEADER_STATUS,
-        http2.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
-      );
-      response.end(e.message);
+      stream.respond({
+        [http2.constants.HTTP2_HEADER_STATUS]: http2.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
+      });
+      stream.end(e.message);
     }
   });
 
