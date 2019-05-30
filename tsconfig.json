@@ -4,20 +4,12 @@
     "module": "commonjs",
     "declaration": true,
     "moduleResolution": "node",
-    "lib": [
-      "es5",
-      "es2015",
-      "dom"
-    ],
+    "lib": ["es5", "es2015", "dom"],
     "jsx": "react",
     "strict": true,
     "importHelpers": true,
     "allowJs": false,
     "baseUrl": "."
   },
-  "include": [
-    "./packages/**/*",
-    "./samples/**/*",
-    "./node_modules/@npmf/**/*"
-  ]
+  "include": ["./packages/**/*", "./samples/**/*", "./test/**/*"]
 }
