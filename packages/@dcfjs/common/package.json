@@ -1,5 +1,5 @@
 {
-  "name": "@dcfjs/server",
+  "name": "@dcfjs/common",
   "version": "1.0.0",
   "main": "index.js",
   "repository": "git@github.com:dcfjs/experimental.git",

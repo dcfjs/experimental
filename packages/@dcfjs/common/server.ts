@@ -1,5 +1,6 @@
 import * as http2 from 'http2';
 import streamToBuffer from './streamToBuffer';
+import { deserialize, serialize } from './serialize';
 
 export type ServerHandler = (body: any | null) => any | Promise<any>;
 export type ServerHandlerMap = { [url: string]: ServerHandler };
@@ -40,12 +41,6 @@ export async function createServer(
       stream.end();
       return;
     }
-    if (
-      method === http2.constants.HTTP2_METHOD_POST ||
-      method === http2.constants.HTTP2_METHOD_PUT
-    ) {
-      body = JSON.parse((await streamToBuffer(stream)).toString());
-    }
     const handler = handlers[path];
     if (!handler) {
       stream.respond({
@@ -55,8 +50,22 @@ export async function createServer(
       return;
     }
     try {
+      if (
+        method === http2.constants.HTTP2_METHOD_POST ||
+        method === http2.constants.HTTP2_METHOD_PUT
+      ) {
+        const buf = await streamToBuffer(stream);
+        body = buf.length > 0 ? deserialize(buf) : null;
+      }
+    } catch (e) {
+      stream.respond({
+        [http2.constants.HTTP2_HEADER_STATUS]: http2.constants.HTTP_STATUS_BAD_REQUEST,
+      });
+      stream.end(e.message);
+    }
+    try {
       let resp = await handler(body);
-      stream.end(JSON.stringify(resp));
+      stream.end(serialize(resp));
     } catch (e) {
       stream.respond({
         [http2.constants.HTTP2_HEADER_STATUS]: http2.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,

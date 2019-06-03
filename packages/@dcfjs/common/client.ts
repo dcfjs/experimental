@@ -1,5 +1,6 @@
 import * as http2 from 'http2';
 import streamToBuffer from './streamToBuffer';
+import { deserialize, serialize } from './serialize';
 
 export interface ClientConfig { }
 
@@ -10,6 +11,7 @@ export class RequestNotFoundError extends Error {
     super('Not found.');
   }
 }
+export class RequestBadRequestError extends Error { }
 export class RequestInternalServerError extends Error { }
 export class RequestInvalidResponseError extends Error {
   constructor() {
@@ -42,7 +44,7 @@ export class Client {
     });
     try {
       if (body) {
-        req.end(JSON.stringify(body));
+        req.end(serialize(body));
       }
       const headers: http2.IncomingHttpHeaders &
         http2.IncomingHttpStatusHeader = await new Promise(
@@ -53,6 +55,10 @@ export class Client {
         );
 
       switch ((headers[http2.constants.HTTP2_HEADER_STATUS] as any) as number) {
+        case http2.constants.HTTP_STATUS_BAD_REQUEST:
+          throw new RequestBadRequestError(
+            (await streamToBuffer(req)).toString(),
+          );
         case http2.constants.HTTP_STATUS_NOT_FOUND:
           throw new RequestNotFoundError();
         case http2.constants.HTTP_STATUS_INTERNAL_SERVER_ERROR:
@@ -60,7 +66,7 @@ export class Client {
             (await streamToBuffer(req)).toString(),
           );
         case http2.constants.HTTP_STATUS_OK:
-          return JSON.parse((await streamToBuffer(req)).toString());
+          return deserialize(await streamToBuffer(req));
         default:
           throw new RequestInvalidResponseError();
       }
